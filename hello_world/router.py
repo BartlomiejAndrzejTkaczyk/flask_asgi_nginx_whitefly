@@ -9,5 +9,5 @@ async def hello_world():
 
 
 @router.route('/json')
-async def hello_world():
+async def hello_world_json():
     return jsonify({'hello_world :)': 200})
