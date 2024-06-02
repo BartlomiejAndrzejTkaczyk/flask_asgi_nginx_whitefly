@@ -1,0 +1,125 @@
+version: "3.8"
+
+services:
+  redis_flask_asgi:
+    image: redis:7.0.10
+    container_name: redis_flask_asgi
+    restart: always
+    volumes:
+      - redis_flask_asgi_volume:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - flask_asgi_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "com.example.service=redis_flask_asgi"
+
+  flask_asgi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: flask_asgi
+    restart: always
+    ports:
+      - "5000:5000"
+    networks:
+      - flask_asgi_network
+    depends_on:
+      redis_flask_asgi:
+        condition: service_healthy
+    volumes:
+      - flask_asgi_volume:/app
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres_flask_asgi:5432/postgres
+      - CELERY_BROKER_URL=redis://redis_flask_asgi:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis_flask_asgi:6379/0
+    labels:
+      - "com.example.service=flask_asgi"
+    expose:
+      - "5000"
+
+  celery_flask_worker_asgi:
+    container_name: celery_flask_worker_asgi
+    build: .
+    command: celery -A user_async.services worker --loglevel=info
+    volumes:
+      - flask_asgi_volume:/app
+    environment:
+      - CELERY_BROKER_URL=redis://redis_flask_asgi:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis_flask_asgi:6379/0
+      - DATABASE_URL=postgresql://postgres:postgres@postgres_flask_asgi:5432/postgres
+    networks:
+      - flask_asgi_network
+    depends_on:
+      - flask_asgi
+      - redis_flask_asgi
+
+  flower_flask_asgi:
+    container_name: flower_flask_asgi
+    build: .
+    command: celery -A user_async.services flower --port=5556
+    volumes:
+      - flask_asgi_volume:/app
+    ports:
+      - "5557:5556"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres_flask_asgi:5432/postgres
+      - CELERY_BROKER_URL=redis://redis_flask_asgi:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis_flask_asgi:6379/0
+    networks:
+      - flask_asgi_network
+    depends_on:
+      - flask_asgi
+      - redis_flask_asgi
+      - celery_flask_worker_asgi
+
+  postgres_flask_asgi:
+    image: postgres:14
+    container_name: postgres_flask_asgi
+    restart: always
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_flask_asgi_volume:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - flask_asgi_network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "com.example.service=postgres_asgi"
+
+  nginx_flask_asgi:
+    build:
+      dockerfile: Dockerfile
+      context: ./nginx
+    container_name: nginx_flask_asgi
+    restart: always
+    ports:
+      - "80:80"
+    networks:
+      - flask_asgi_network
+    depends_on:
+      - flask_asgi
+    labels:
+      - "com.example.service=nginx_asgi"
+
+volumes:
+  redis_flask_asgi_volume:
+  redis_insight_flask_asgi_volume:
+  flask_asgi_volume:
+  postgres_flask_asgi_volume:
+
+networks:
+  flask_asgi_network:
