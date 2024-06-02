@@ -4,11 +4,6 @@ from user.services import create_user
 router = Blueprint('user', __name__, url_prefix='/user', template_folder='templates')
 
 
-@router.route('/usertest', methods=['POST'])
-def hello_world():
-    return jsonify({'hello_world': 200})
-
-
 @router.route('/add', methods=['GET', 'POST'])
 def add_user():
     if request.method == 'POST':

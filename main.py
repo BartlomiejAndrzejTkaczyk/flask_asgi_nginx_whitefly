@@ -10,11 +10,6 @@ app.register_blueprint(user_async_router)
 app.register_blueprint(loader_io_router)
 
 
-@app.route('/')
-async def hello_world():
-    return jsonify({'hello_world :)': 200})
-
-
 if __name__ == "__main__":
     app.run(debug=True)
 asgi_app = WsgiToAsgi(app)
