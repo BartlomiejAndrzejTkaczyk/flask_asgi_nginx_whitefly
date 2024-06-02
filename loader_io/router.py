@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint
 
 router = Blueprint('loader_io', __name__, url_prefix='')
 
