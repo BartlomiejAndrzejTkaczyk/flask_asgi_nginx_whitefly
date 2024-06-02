@@ -9,14 +9,14 @@ from common.security import hashing_password
 from common.models import User
 
 
-def find_user_by(nickname: str) -> User | None:
+async def find_user_by(nickname: str) -> User | None:
     db = SessionLocal()
     user = db.query(User).filter(User.nickname == nickname).first()
 
     return user
 
 
-def create_user(nickname: str, password: str, info: str) -> User | None:
+async def create_user(nickname: str, password: str, info: str) -> User :
     db = SessionLocal()
 
     is_exists = find_user_by(nickname=nickname) is not None
@@ -28,7 +28,7 @@ def create_user(nickname: str, password: str, info: str) -> User | None:
         db.add(user)
         db.commit()
         db.refresh(user)
-        return user.to_json()
+        return user
     except IntegrityError:
         db.rollback()
         raise UserExistsException()
