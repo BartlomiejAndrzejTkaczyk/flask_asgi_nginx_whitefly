@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask
 from user.router import router as user_router
 from user_async.router import router as user_async_router
 from loader_io.router import router as loader_io_router

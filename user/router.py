@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, render_template
+from flask import Blueprint, request, render_template
 from user.services import create_user
 
 router = Blueprint('user', __name__, url_prefix='/user', template_folder='templates')
@@ -10,7 +10,7 @@ async def add_user():
         nickname = request.form.get('nickname', 'nickname')
         password = request.form.get('password', 'password')
         info = request.form.get('info', 'info')
-        task = await create_user(nickname, password, info)
-        return render_template('success.html', task_id=task.id)
+        user_db = await create_user(nickname, password, info)
+        return render_template('success.html', nickname=user_db.nickname, info=user_db.info)
     else:
         return render_template('add_user.html')
