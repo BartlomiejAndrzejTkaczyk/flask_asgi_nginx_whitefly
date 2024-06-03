@@ -7,7 +7,7 @@ from common.database import SessionLocal
 from common.models import User
 from common.security import hashing_password
 
-load_dotenv()
+load_dotenv('.local_env')
 
 celery_app = Celery("worker", broker=os.getenv('CELERY_BROKER_URL'), backend=os.getenv('CELERY_RESULT_BACKEND'))
 

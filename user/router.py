@@ -1,7 +1,7 @@
 from flask import Blueprint, request, render_template
 from user.services import create_user
 
-router = Blueprint('user', __name__, url_prefix='/user', template_folder='templates')
+router = Blueprint('user', __name__, url_prefix='/user', template_folder='./templates')
 
 
 @router.route('/add', methods=['GET', 'POST'])
